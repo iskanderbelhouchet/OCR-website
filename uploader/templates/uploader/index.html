@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %} Home {% endblock %}
+
+{% block extrahead %} {% endblock %}
+
+{% block extrastyle %}
+<style>
+
+    .clickable_img:hover {
+        cursor: pointer;
+    }
+</style>
+
+{% endblock %}
+
+{% block extrascript %}
+<script>
+$('.custom-file-input').on('change', function() {
+   let fileName = $(this).val().split('\\').pop();
+   $(this).next('.custom-file-label').addClass("selected").html(fileName);
+});
+
+
+function show_img_details(img_path){
+    $('#img_detail').attr("src", img_path);
+    $('#img_detail_modal').modal('toggle');
+}
+
+
+</script>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="mt-5 text-center">
+    <h1>OCR web</h1>
+</div>
+
+<div class="offset-md-2 col-md-8 my-5" id="image_form">
+    <form action="#image_form" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <fieldset class="form-group">
+            <div class="custom-file my-2">
+                {{image_form.image|add_class:"custom-file-input"}}
+                <label class="custom-file-label">{{ image_form.image.label }}</label>
+                {% for error in field.errors %}
+                <span class="badge badge-danger">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </fieldset>
+    </form>
+</div>
+
+<div>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th scope="col" class="text-center">#</th>
+            <th scope="col" class="d-none d-sm-table-cell">Internal Reference</th>
+            <th scope="col" class="d-none d-md-table-cell">OCR Text</th>
+            <th scope="col" class="text-center">Image</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for image in image_list %}
+        <tr>
+            <th scope="row">{{image.id}}</th>
+            <td class="d-none d-sm-table-cell">{{image.internal_reference}}</td>
+            {% with image.ocrtext_set.last as ocrtext%}
+            <td class="d-none d-md-table-cell">{{ ocrtext.text|truncatechars:350}}</td>
+            {% endwith%}
+            <td class="text-center">
+                <div class="clickable_img"  onclick="show_img_details('/media/{{image.image}}')">
+                    <img class="img-fluid img-thumbnail " src="/media/{{image.image}}" alt="{{image.image}}" width="100" />
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+<div id="img_detail_modal" class="modal mt-5" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <img id="img_detail" class="img-fluid" src="" alt="" />
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
